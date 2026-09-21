@@ -21,15 +21,19 @@ namespace AssistenciaTecnica.Domain.Entities
     public class Cliente
     {
         public Guid Id { get; private set; }
+        public Guid TenantId { get; private set; }
         public string RazaoSocial { get; private set; }
         public string Cnpj { get; private set; }
 
-        public Cliente(string razaoSocial, string cnpj)
+        public Cliente(Guid tenantId, string razaoSocial, string cnpj)
         {
             ValidarCampoObrigatorio(razaoSocial, nameof(razaoSocial));
             ValidarCampoObrigatorio(cnpj, nameof(cnpj));
 
+            ValidarTentantIdVazio(tenantId, nameof(tenantId));
+
             Id = Guid.NewGuid();
+            TenantId = tenantId;
             RazaoSocial = razaoSocial;
             Cnpj = cnpj;
         }
@@ -39,6 +43,14 @@ namespace AssistenciaTecnica.Domain.Entities
             if (string.IsNullOrWhiteSpace(valor))
             {
                 throw new ArgumentException("O campo é obrigatório!", campoObrigatorio);
+            }
+        }
+
+        private static void ValidarTentantIdVazio(Guid tenantId, string nomeCampo)
+        {
+            if(tenantId == Guid.Empty)
+            {
+                throw new ArgumentException("TentantId está vazio!", nomeCampo);
             }
         }
     }
