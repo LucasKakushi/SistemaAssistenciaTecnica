@@ -96,10 +96,12 @@ public class ClienteTests
         Assert.Equal("cnpj", exception.ParamName);
     }
 
-    [Fact]
-    public void CriarCliente_QuandoCnpjFormatado_DeveNormalizarCnpj()
+    [Theory]
+    [InlineData("04.252.011/0001-10")]
+    [InlineData("04..252.011/0001-10")]
+    [InlineData(" 04.252.011/0001-10 ")]
+    public void CriarCliente_QuandoCnpjFormatado_DeveNormalizarCnpj(string cnpj)
     {
-        string cnpj = "04.252.011/0001-10";
         string cnpjEsperado = "04252011000110";
         var cliente = new Cliente(Guid.NewGuid(), "Empresa Exemplo Ltda.", cnpj);
 
@@ -237,6 +239,25 @@ public class ClienteTests
                 "12ABC34501DE36"
             );
         });
+
+        Assert.Equal("cnpj", exception.ParamName);
+    }
+
+    [Theory]
+    [InlineData("04.252.011 /0001-10")]
+    [InlineData("0425201 000110")]
+    public void CriarCliente_QuandoCnpjTiverEspacosInternos_DeveLancarArgumentException(string cnpj)
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+        {
+            _ = new Cliente(
+                Guid.NewGuid(),
+                "Empresa Exemplo Ltda.",
+                cnpj
+            );
+        });
+
+        Assert.Equal("cnpj", exception.ParamName);
     }
 
     private static Cliente CriarCliente(Guid tenantId, string razaoSocial = "Empresa Exemplo Ltda.", string cnpj = "04252011000110")

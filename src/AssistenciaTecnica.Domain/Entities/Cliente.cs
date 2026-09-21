@@ -71,6 +71,7 @@ namespace AssistenciaTecnica.Domain.Entities
             cnpj = cnpj.Replace("/", "");
             cnpj = cnpj.Replace("-", "");
 
+            cnpj = cnpj.Trim();
             cnpj = cnpj.ToUpperInvariant();
             return cnpj;
         }
