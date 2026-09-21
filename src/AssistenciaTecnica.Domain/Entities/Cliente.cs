@@ -37,6 +37,8 @@ namespace AssistenciaTecnica.Domain.Entities
 
             VerificarQuantidadeCaracteresCnpj(cnpjNormalizado, nameof(cnpj));
 
+            VerificarCnpjZerado(cnpjNormalizado, nameof(cnpj));
+
             VerificarCaracteresCnpj(cnpjNormalizado, nameof(cnpj));
 
             VerificarUltimosDoisDigitos(cnpjNormalizado, nameof(cnpj));
@@ -59,7 +61,7 @@ namespace AssistenciaTecnica.Domain.Entities
         {
             if(tenantId == Guid.Empty)
             {
-                throw new ArgumentException("TentantId está vazio!", nomeCampo);
+                throw new ArgumentException("TenantId está vazio!", nomeCampo);
             }
         }
 
@@ -69,6 +71,7 @@ namespace AssistenciaTecnica.Domain.Entities
             cnpj = cnpj.Replace("/", "");
             cnpj = cnpj.Replace("-", "");
 
+            cnpj = cnpj.ToUpperInvariant();
             return cnpj;
         }
 
@@ -82,7 +85,6 @@ namespace AssistenciaTecnica.Domain.Entities
 
         private static void VerificarCaracteresCnpj(string cnpj, string nomeCampo)
         {
-            
 
             foreach(var caractere in cnpj)
             {
@@ -109,6 +111,20 @@ namespace AssistenciaTecnica.Domain.Entities
             {
                 throw new ArgumentException("O CNPJ contém caracteres não permitidos.", nomeCampo);
             }
+
+            int primeiroDigitoInformado = cnpj[12] - '0';
+            int primeiroDigitoCalculado = CalcularPrimeiroDigito(cnpj);
+            if(primeiroDigitoCalculado != primeiroDigitoInformado){
+                throw new ArgumentException("O CNPJ contém o primeiro digito inválido", nomeCampo);
+            }
+
+
+            int segundoDigitoInformado = cnpj[13] - '0';
+            int segundoDigitoCalculado = CalcularSegundoDigito(cnpj);
+            if(segundoDigitoCalculado != segundoDigitoInformado){
+                throw new ArgumentException("O CNPJ contém o segundo digito inválido", nomeCampo);
+            }
+
         }
 
         private static int CalcularPrimeiroDigito(string cnpj)
@@ -123,6 +139,29 @@ namespace AssistenciaTecnica.Domain.Entities
             int resto = soma % 11;
             int digito = resto < 2 ? 0 : 11 - resto;
             return digito;
+        }
+
+        private static int CalcularSegundoDigito(string cnpj){
+            int[] pesos = { 6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+            int soma = 0;
+
+            for(int i = 0; i< pesos.Length; i++){
+                int valor = cnpj[i] - '0';
+                soma += valor * pesos[i];
+            }
+
+            int resto = soma % 11;
+            int digito = resto < 2 ? 0 : 11 - resto;
+
+            return digito;
+        }
+
+        private static void VerificarCnpjZerado(string cnpj, string nomeCampo)
+        {
+            if(cnpj == "00000000000000")
+            {
+                    throw new ArgumentException("O CNPJ não pode ser composto apenas por zeros.", nomeCampo);
+            }
         }
     }
 }

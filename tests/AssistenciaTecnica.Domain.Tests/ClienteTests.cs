@@ -6,7 +6,7 @@ CriarCliente_QuandoDadosValidos_DeveCriarCliente
 
 Arrange:
 razão social = "Empresa Exemplo Ltda."
-cnpj = "12345678901234"
+cnpj = ""04252011000110""
 
 Act:
 criar Cliente
@@ -14,7 +14,7 @@ criar Cliente
 Assert:
 Id != Guid.Empty
 RazaoSocial == "Empresa Exemplo Ltda."
-Cnpj == "12345678901234"
+Cnpj == ""04252011000110""
 
 */
 
@@ -32,7 +32,7 @@ public class ClienteTests
 
         Assert.NotEqual(Guid.Empty, cliente.Id);
         Assert.Equal("Empresa Exemplo Ltda.", cliente.RazaoSocial);
-        Assert.Equal("12345678901234", cliente.Cnpj);
+        Assert.Equal("04252011000110", cliente.Cnpj);
 
     }
 
@@ -44,7 +44,7 @@ public class ClienteTests
             _ = new Cliente(
                 Guid.Empty,
                 "Empresa Exemplo Ltda.",
-                "12345678901234"
+                "04252011000110"
             );
         });
 
@@ -62,7 +62,7 @@ public class ClienteTests
             _ = new Cliente(
                 Guid.NewGuid(),
                 razaoSocial!,
-                "12345678901234"
+                "04252011000110"
             );
         });
 
@@ -157,8 +157,8 @@ public class ClienteTests
     }
 
     [Theory]
-    [InlineData("AB1234567890A1")] // Letra na penúltima posição
-    [InlineData("AB12345678901A")] // Letra na última posição
+    [InlineData("AB1234567890A1")]
+    [InlineData("AB12345678901A")]
     public void CriarCliente_QuandoDigitosVerificadoresContemLetra_DeveLancarArgumentException(string cnpj)
     {
         var exception = Assert.Throws<ArgumentException>(() =>
@@ -175,7 +175,22 @@ public class ClienteTests
     }
 
     [Fact]
-    public void CriarCliente_QuandoDigitoVerificadorIncorreto_DeveLancarArgumentException()
+    public void CriarCliente_QuandoPrimeiroDigitoVerificadorIncorreto_DeveLancarArgumentException()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+        {
+            _ = new Cliente(
+                Guid.NewGuid(),
+                "Empresa Exemplo Ltda.",
+                "04252011000120"
+            );
+        });
+
+        Assert.Equal("cnpj", exception.ParamName);
+    }
+
+    [Fact]
+    public void CriarCliente_QuandoSegundoDigitoVerificadorIncorreto_DeveLancarArgumentException()
     {
         var exception = Assert.Throws<ArgumentException>(() =>
         {
@@ -189,7 +204,42 @@ public class ClienteTests
         Assert.Equal("cnpj", exception.ParamName);
     }
 
-    private static Cliente CriarCliente(Guid tenantId, string razaoSocial = "Empresa Exemplo Ltda.", string cnpj = "12345678901234")
+    [Fact]
+    public void CriarCliente_QuandoTodosOsDigitosSaoZero_DeveLancarArgumentException()
+    {
+        var exception = Assert.Throws<ArgumentException>(() => 
+        {
+            _ = new Cliente(
+                Guid.NewGuid(),
+                "Empresa Exemplo Ltda.",
+                "00000000000000"
+            );
+        });
+    }
+
+    [Theory]
+    [InlineData("12.ABC.345/01DE-35")]
+    [InlineData("12.abc.345/01de-35")]
+    public void CriarCliente_QuandoAlfanumerico_DeveNormalizarParaMaiusculo(string cnpj)
+    {
+        var cliente = new Cliente(Guid.NewGuid(), "Empresa Exemplo Ltda.", cnpj);
+        Assert.Equal("12ABC34501DE35", cliente.Cnpj);
+    }
+
+    [Fact]
+    public void CriarCliente_QuandoCnpjAlfanumericoTemSegundoDigitoIncorreto_DeveLancarArgumentException()
+    {
+        var exception = Assert.Throws<ArgumentException>(() => 
+        {
+            _ = new Cliente(
+                Guid.NewGuid(),
+                "Empresa Exemplo Ltda.",
+                "12ABC34501DE36"
+            );
+        });
+    }
+
+    private static Cliente CriarCliente(Guid tenantId, string razaoSocial = "Empresa Exemplo Ltda.", string cnpj = "04252011000110")
     {
         return new Cliente(tenantId, razaoSocial, cnpj);
     }
